@@ -8,6 +8,8 @@ import { createRequire } from 'node:module';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 5211;
 const CDP_PORT = 9333;
+const REMOTE = process.env.MELODIA_URL;
+const BASE = REMOTE || `http://127.0.0.1:${PORT}`;
 const SHOT = join(ROOT, 'tools', 'screenshot.png');
 
 const CHROME_CANDIDATES = [
@@ -52,6 +54,7 @@ const server = spawn(process.execPath, ['tools/serve.mjs'], {
 let serverOut = '';
 server.stdout.on('data', d => (serverOut += d));
 server.stderr.on('data', d => (serverOut += d));
+console.log(`probando ${BASE}${REMOTE ? ' (deploy remoto)' : ' (local)'}`);
 
 const profile = join(process.env.TEMP || '.', 'melodia-e2e-profile');
 rmSync(profile, { recursive: true, force: true });
@@ -145,7 +148,7 @@ try {
     mobile: true,
   }, sessionId);
 
-  await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html` }, sessionId);
+  await send('Page.navigate', { url: `${BASE}/index.html` }, sessionId);
 
   let booted = false;
   for (let i = 0; i < 60; i++) {
@@ -533,7 +536,7 @@ try {
     { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 },
     sessionId
   );
-  server.kill();
+  if (!REMOTE) server.kill();
   await sleep(400);
 
   await send('Page.reload', { ignoreCache: true }, sessionId);
@@ -548,7 +551,7 @@ try {
     } catch {}
     if (offlineBoot) break;
   }
-  check('arranca SIN internet (servidor apagado)', offlineBoot === true);
+  check('arranca SIN internet (red caida)', offlineBoot === true);
 
   const offlineRows = await evaluate(
     `JSON.stringify({

@@ -4,6 +4,17 @@ Reproductor de música **offline** para el celular. Importás tus canciones, arm
 
 No descarga nada de servicios de streaming ni saltea protecciones de ningún tipo. Toda la música que suena sale de tu propio dispositivo.
 
+## Melodia en tu celular
+
+**App publicada:** <https://traderxael.github.io/melodia/>
+
+1. Abrí ese link en el celu (Chrome en Android, Safari en iPhone).
+2. Tocá **⋮ → Agregar a la pantalla de inicio** (o el botón **Instalar** dentro de Ajustes).
+3. Abrila desde el ícono. Quedó instalada: funciona sin internet y sin barra de navegador.
+4. Tocá el **+** para importar las canciones que ya tenés en el celu.
+
+> Instalá y usala un par de veces entrando a Ajustes → **Pedir almacenamiento permanente**. Android e iOS pueden borrar los datos de sitios web que no usás, y sin ese permiso las canciones se pierden.
+
 ## Qué hace
 
 - **Importar desde el celu**: MP3, M4A, AAC, FLAC, WAV, OGG, OPUS, AIFF.
@@ -49,7 +60,13 @@ npm run test:browser  # 53 pruebas end-to-end en Chrome/Edge real vía DevTools 
 npm run icons         # regenera los PNG del ícono
 ```
 
-`test:browser` levanta la app, importa canciones, reproduce, crea playlists, apaga el servidor y verifica que **todo siga funcionando sin internet**. Se saltea solo si no encuentra Chrome o Edge. Si no tenés el módulo `ws`, también se saltea.
+`test:browser` levanta la app, importa canciones, reproduce, crea playlists, corta la red y verifica que **todo siga funcionando sin internet**. Se saltea solo si no encuentra Chrome o Edge, o si no tenés el módulo `ws`.
+
+Para correrlo contra el sitio ya deployado en vez del servidor local:
+
+```bash
+MELODIA_URL=https://traderxael.github.io/melodia npm run test:browser
+```
 
 ## Estructura
 
