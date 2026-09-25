@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Melodia — tu musica, sin internet</title>
+<meta name="description" content="Reproductor de musica offline. Importa tus archivos, escuchalos sin internet y sin anuncios.">
+<meta name="theme-color" content="#0b0b12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Melodia">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <h1 class="brand" id="brandTitle">Melodia</h1>
+      <button class="icon-btn" id="btnSearchToggle" aria-label="Buscar" title="Buscar">
+        <svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 1 0 4.9 14.32l5.39 5.39 1.42-1.42-5.39-5.39A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+      </button>
+      <div class="net-pill" id="netPill" hidden>Sin conexion</div>
+    </div>
+    <div class="searchbar" id="searchBar" hidden>
+      <svg class="search-ico" viewBox="0 0 24 24"><path d="M10 2a8 8 0 1 0 4.9 14.32l5.39 5.39 1.42-1.42-5.39-5.39A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+      <input type="search" id="searchInput" placeholder="Buscar canciones, artistas, albums..." autocomplete="off" enterkeyhint="search">
+      <button class="clear-btn" id="btnSearchClear" aria-label="Limpiar busqueda" hidden>&times;</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" role="tablist">
+    <button class="tab is-active" data-view="library" role="tab">Canciones</button>
+    <button class="tab" data-view="albums" role="tab">Albums</button>
+    <button class="tab" data-view="playlists" role="tab">Playlists</button>
+    <button class="tab" data-view="settings" role="tab">Ajustes</button>
+  </nav>
+
+  <main class="content" id="content">
+    <section class="view is-active" id="view-library" role="tabpanel">
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <button class="btn btn-primary" id="btnImport">
+            <svg viewBox="0 0 24 24"><path d="M12 3l5 5h-3v6h-4V8H7l5-5zM5 18h14v2H5z"/></svg>
+            Importar
+          </button>
+          <input type="file" id="fileInput" accept="audio/*,.mp3,.m4a,.aac,.ogg,.oga,.opus,.wav,.flac,.webm" multiple hidden>
+          <button class="btn" id="btnPlayAll">Reproducir todo</button>
+          <button class="btn" id="btnShuffleAll">Aleatorio</button>
+        </div>
+        <div class="toolbar-group">
+          <select id="sortSelect" class="select" aria-label="Ordenar por">
+            <option value="recent">Mas recientes</option>
+            <option value="title">Titulo A-Z</option>
+            <option value="artist">Artista A-Z</option>
+            <option value="album">Album A-Z</option>
+            <option value="duration">Duracion</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-row" id="filterRow" hidden>
+        <button class="chip" data-filter="all">Todo</button>
+        <button class="chip" data-filter="local">En el celu</button>
+        <button class="chip" data-filter="saved">Guardados</button>
+        <button class="chip" data-filter="fav">Favoritas</button>
+      </div>
+      <div id="trackList" class="list"></div>
+      <div class="empty" id="libraryEmpty">
+        <svg viewBox="0 0 24 24" class="empty-ico"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+        <h2>Tu musica empieza aqui</h2>
+        <p>Importa los archivos que ya tenes: MP3, M4A, FLAC, WAV, OGG u OPUS. Quedan guardados en el celu y se escuchan sin internet.</p>
+        <button class="btn btn-primary btn-lg" id="btnImportEmpty">Importar musica</button>
+        <p class="hint">Atajos: <kbd>Espacio</kbd> reproducir · <kbd>/</kbd> buscar · <kbd>N</kbd> siguiente</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-albums" role="tabpanel">
+      <div id="albumList" class="grid"></div>
+      <div class="empty" id="albumsEmpty" hidden>
+        <h2>Sin albums</h2>
+        <p>Los albums aparecen automaticamente al leer las etiquetas de tus archivos.</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-playlists" role="tabpanel">
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <button class="btn btn-primary" id="btnNewPlaylist">
+            <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+            Nueva playlist
+          </button>
+        </div>
+      </div>
+      <div id="playlistList" class="grid"></div>
+      <div class="empty" id="playlistsEmpty" hidden>
+        <h2>Todavia no tenes playlists</h2>
+        <p>Crea una y agrupas las canciones como quieras. Se guardan en el celu.</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-settings" role="tabpanel">
+      <div class="settings">
+        <div class="card">
+          <h2>Reproduccion</h2>
+          <label class="set-row">
+            <span>Volumen</span>
+            <input type="range" id="volRange" min="0" max="1" step="0.01">
+            <output id="volOut">80%</output>
+          </label>
+          <label class="set-row">
+            <span>Saltar segundos</span>
+            <input type="number" id="skipInput" min="3" max="30" step="1" value="10">
+          </label>
+          <label class="set-row">
+            <span>Ecualizador del sistema</span>
+            <input type="checkbox" id="loudnessChk" class="switch">
+          </label>
+        </div>
+
+        <div class="card">
+          <h2>Almacenamiento</h2>
+          <div class="stat-grid">
+            <div class="stat"><b id="statTracks">0</b><span>canciones</span></div>
+            <div class="stat"><b id="statSize">0 MB</b><span>usado</span></div>
+            <div class="stat"><b id="statPlaylists">0</b><span>playlists</span></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="btnRequestPersist">Pedir almacenamiento permanente</button>
+            <button class="btn" id="btnExportAll">Exportar biblioteca (JSON)</button>
+            <button class="btn" id="btnImportBackup">Importar respaldo</button>
+            <input type="file" id="backupInput" accept="application/json,.json" hidden>
+            <button class="btn btn-danger" id="btnClearAll">Borrar todo</button>
+          </div>
+          <p class="hint" id="persistHint"></p>
+        </div>
+
+        <div class="card">
+          <h2>Instalar en el celu</h2>
+          <p class="hint" id="installHint">Toca "Instalar" para agregar el icono a la pantalla de inicio y usarlo sin internet.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btnInstall" hidden>Instalar app</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Fuentes de musica</h2>
+          <p>Use musica que sea tuya o libre de derechos. Buenos sitios para empezar:</p>
+          <ul class="links">
+            <li><a href="https://freemusicarchive.org" target="_blank" rel="noopener">Free Music Archive</a> —Musica libre con licencia clara</li>
+            <li><a href="https://jamendo.com" target="_blank" rel="noopener">Jamendo</a> —Artistas independientes, descarga gratis</li>
+            <li><a href="https://archive.org/details/audio" target="_blank" rel="noopener">Internet Archive</a> —Grabaciones de dominio publico</li>
+            <li><a href="https://www.youtube.com/audiolibrary" target="_blank" rel="noopener">YouTube Audio Library</a> —Musica sin atribucion</li>
+          </ul>
+          <p class="hint">Tambien podes ripear tus CDs o copias las canciones que ya tenes compradas.</p>
+        </div>
+
+        <div class="card">
+          <h2>Acerca de</h2>
+          <p class="hint">Melodia es un reproductor personal. No descarga ni reproduce musica de servicios de streaming con suscripcion, y no incluye ningun anuncio: toda la musica que suena sale de tu dispositivo.</p>
+          <p class="hint" id="versionInfo"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="player" id="player" hidden>
+    <div class="seek" id="seekWrap" role="slider" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+      <div class="seek-buffer" id="seekBuffer"></div>
+      <div class="seek-fill" id="seekFill"><div class="seek-knob"></div></div>
+    </div>
+    <div class="player-main" id="playerMain">
+      <img class="np-art" id="npArt" alt="" hidden>
+      <div class="np-text">
+        <div class="np-title" id="npTitle">Nada sonando</div>
+        <div class="np-artist" id="npArtist">Importa musica para empezar</div>
+      </div>
+      <button class="icon-btn np-like" id="btnLike" aria-label="Marcar como favorita" title="Favorita">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9A5.2 5.2 0 0 1 12 6.6 5.2 5.2 0 0 1 21.3 12c-1.8 4.4-9.3 9-9.3 9z"/></svg>
+      </button>
+    </div>
+    <div class="controls">
+      <button class="icon-btn" id="btnShuffle" aria-label="Aleatorio" title="Aleatorio">
+        <svg viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-4.3 4.3-1.4-1.4L17.6 5H16V3zM3 6h4.6l7.1 7.1 1.4 1.4 2.9-2.9 1.4 1.4-3.1 3.1-1.4 1.4L10.6 11 8 8H3V6zm13 9.6L14.2 12l-1.4 1.4 1.8 3.6H21v-2h-4.6l-1.4 1.4-1.4-1.4L14 15.6 16 18v2.4l-3.1-3.1L11.5 16l-1.4-1.4 1.8-1.8L16 16.6V15.6z"/></svg>
+      </button>
+      <button class="icon-btn" id="btnPrev" aria-label="Anterior" title="Anterior">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3 6l9 6V6z"/></svg>
+      </button>
+      <button class="btn-play" id="btnPlay" aria-label="Reproducir" title="Reproducir">
+        <svg id="icoPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="icoPause" viewBox="0 0 24 24" hidden><path d="M7 5h3.5v14H7zm6.5 0H17v14h-3.5z"/></svg>
+      </button>
+      <button class="icon-btn" id="btnNext" aria-label="Siguiente" title="Siguiente">
+        <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l9-6-9-6z"/></svg>
+      </button>
+      <button class="icon-btn" id="btnRepeat" aria-label="Repetir" title="Repetir">
+        <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        <span class="rep-one" id="repOne" hidden>1</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="dock" id="dock">
+    <button class="dock-btn is-active" data-view="library">
+      <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+      <span>Canciones</span>
+    </button>
+    <button class="dock-btn" data-view="albums">
+      <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14z"/></svg>
+      <span>Albums</span>
+    </button>
+    <button class="dock-btn is-add" id="btnDockAdd" aria-label="Importar musica">
+      <span class="add-ring"><svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg></span>
+    </button>
+    <button class="dock-btn" data-view="playlists">
+      <svg viewBox="0 0 24 24"><path d="M3 5h13v2H3zm0 6h13v2H3zm0 6h9v2H3zm16-10v8.2a3 3 0 1 0 2 2.8V7h3V5h-5z"/></svg>
+      <span>Playlists</span>
+    </button>
+    <button class="dock-btn" data-view="settings">
+      <svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.4 4c0-.5-.1-1-.2-1.5l2-1.5-2-3.4-2.3 1a8 8 0 0 0-2.6-1.5L14.9 2h-3.9L10.6 5A8 8 0 0 0 8 6.5l-2.3-1-2 3.4 2 1.5a8 8 0 0 0 0 3l-2 1.5 2 3.4 2.3-1A8 8 0 0 0 10.6 19l.4 3h3.9l.4-3A8 8 0 0 0 18 17.5l2.3 1 2-3.4-2-1.5c.1-.5.1-1 .1-1.5z"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+
+<div class="sheet" id="npSheet" hidden aria-modal="true" role="dialog" aria-label="Reproductor">
+  <div class="sheet-grip"></div>
+  <div class="np-big">
+    <img id="npBigArt" alt="" hidden>
+    <div class="np-placeholder" id="npBigPlaceholder"><svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></div>
+    <div class="np-badges">
+      <span class="badge" id="npSourceBadge">En el celu</span>
+    </div>
+  </div>
+  <div class="np-meta">
+    <div class="np-title" id="npSheetTitle">Nada sonando</div>
+    <div class="np-artist" id="npSheetArtist">Importa musica para empezar</div>
+  </div>
+  <div class="seek-lg">
+    <div class="seek" id="seekWrap2" role="slider" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+      <div class="seek-buffer" id="seekBuffer2"></div>
+      <div class="seek-fill" id="seekFill2"><div class="seek-knob"></div></div>
+    </div>
+    <div class="times"><span id="timeCur">0:00</span><span id="timeDur">0:00</span></div>
+  </div>
+  <div class="controls controls-lg">
+    <button class="icon-btn" id="btnShuffle2" aria-label="Aleatorio"><svg viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-4.3 4.3-1.4-1.4L17.6 5H16V3zM3 6h4.6l7.1 7.1 1.4 1.4 2.9-2.9 1.4 1.4-3.1 3.1-1.4 1.4L10.6 11 8 8H3V6zm13 9.6L14.2 12l-1.4 1.4 1.8 3.6H21v-2h-4.6l-1.4 1.4-1.4-1.4L14 15.6 16 18v2.4l-3.1-3.1L11.5 16l-1.4-1.4 1.8-1.8L16 16.6V15.6z"/></svg></button>
+    <button class="icon-btn" id="btnPrev2" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3 6l9 6V6z"/></svg></button>
+    <button class="btn-play btn-play-lg" id="btnPlay2" aria-label="Reproducir">
+      <svg id="icoPlay2" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="icoPause2" viewBox="0 0 24 24" hidden><path d="M7 5h3.5v14H7zm6.5 0H17v14h-3.5z"/></svg>
+    </button>
+    <button class="icon-btn" id="btnNext2" aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l9-6-9-6z"/></svg></button>
+    <button class="icon-btn" id="btnRepeat2" aria-label="Repetir"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg><span class="rep-one" id="repOne2" hidden>1</span></button>
+  </div>
+  <div class="np-volume">
+    <svg viewBox="0 0 24 24" class="vol-ico"><path d="M4 9h3l5-4v14l-5-4H4V9z"/></svg>
+    <input type="range" id="volRange2" min="0" max="1" step="0.01" aria-label="Volumen">
+  </div>
+  <div class="sheet-actions">
+    <button class="btn" id="btnSheetFav">Favorita</button>
+    <button class="btn" id="btnSheetAdd">Agregar a playlist</button>
+    <button class="btn" id="btnSheetDownload">Guardar en el celu</button>
+    <button class="btn" id="btnSheetQueue">Ver cola</button>
+    <button class="btn" id="btnSheetEdit">Editar etiquetas</button>
+  </div>
+</div>
+
+<div class="sheet sheet-mid" id="queueSheet" hidden aria-modal="true" role="dialog" aria-label="Cola">
+  <div class="sheet-grip"></div>
+  <h2>En la cola</h2>
+  <div id="queueList" class="list list-compact"></div>
+  <div class="sheet-actions"><button class="btn" id="btnClearQueue">Vaciar cola</button></div>
+</div>
+
+<div class="sheet sheet-mid" id="addSheet" hidden aria-modal="true" role="dialog" aria-label="Agregar a playlist">
+  <div class="sheet-grip"></div>
+  <h2 id="addSheetTitle">Agregar a playlist</h2>
+  <div id="addPlaylistList" class="list list-compact"></div>
+  <div class="sheet-actions"><button class="btn btn-primary" id="btnCreateForAdd">+ Crear playlist nueva</button></div>
+</div>
+
+<div class="sheet sheet-mid" id="tagSheet" hidden aria-modal="true" role="dialog" aria-label="Editar etiquetas">
+  <div class="sheet-grip"></div>
+  <h2>Editar etiquetas</h2>
+  <form id="tagForm" class="form">
+    <label>Titulo<input name="title" required></label>
+    <label>Artista<input name="artist"></label>
+    <label>Album<input name="album"></label>
+    <label>Año<input name="year" inputmode="numeric" maxlength="4"></label>
+    <label>Genero<input name="genre"></label>
+    <div class="form-row">
+      <button type="button" class="btn" id="btnTagCancel">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+<audio id="audio" preload="metadata"></audio>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
