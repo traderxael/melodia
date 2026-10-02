@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests del reproductor
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # test:browser queda fuera a proposito: necesita un Chrome instalado
+      # (usa CDP y toma screenshots). Se cubre manualmente en local.
+      - name: Validar estructura y referencias
+        run: npm run check
+
+      - name: Tests de tags
+        run: npm run test:tags
+
+      - name: Tests del servidor
+        run: npm run test:server
